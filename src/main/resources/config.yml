@@ -1,0 +1,8 @@
+check_update: true
+
+storage_mode: default
+host: #localhost
+port: #3306 or 1433
+database: #database
+username: #root
+password: #root

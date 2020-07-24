@@ -1,0 +1,9 @@
+name: ZQExtension
+main: cn.yzq25.extension.ExtensionMain
+version: "1.1.0"
+api: ["1.0.5"]
+load: STARTUP
+
+author: Yanziqing25
+description: 一款拓展插件
+website: http://www.yzq25.cn
