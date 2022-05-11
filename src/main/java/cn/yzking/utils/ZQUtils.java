@@ -1,34 +1,26 @@
-package cn.yzq25.utils;
+package cn.yzking.utils;
 
 import cn.nukkit.item.Item;
 import cn.nukkit.plugin.Plugin;
-import cn.nukkit.utils.TextFormat;
-import cn.nukkit.utils.Utils;
-import cn.yzq25.extension.ExtensionMain;
-import org.json.JSONObject;
+import cn.yzking.extension.ExtensionMain;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Yanziqing25
  */
 public class ZQUtils {
-    public static Date getDateTime() {
-        return new Date();
-    }
-
-    public static String transformDateTime(Date date) {
-        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
-    }
-
     public static String transformMD5(String string, String salt) {
         try {
             MessageDigest md5 = MessageDigest.getInstance("MD5");
@@ -41,12 +33,12 @@ public class ZQUtils {
     }
 
     public static int getItemID(String str) {
-        return Integer.valueOf(str.split(":")[0]);
+        return Integer.parseInt(str.split(":")[0]);
     }
 
     public static int getItemMeta(String str) {
         if (str.contains(":")) {
-            return Integer.valueOf(str.split(":")[1]);
+            return Integer.parseInt(str.split(":")[1]);
         } else {
             return 0;
         }
@@ -954,28 +946,36 @@ public class ZQUtils {
         }
     }
 
-    private static JSONObject getPluginJsonObject(Plugin plugin) {
+    private static JsonObject getPluginJsonObject(Plugin plugin) {
         try {
-            URL url = new URL("http://www.mcel.cn:80/plugins/" + plugin.getName() + "/update.json");
-            url.openConnection().setConnectTimeout(30000);
-            url.openConnection().setReadTimeout(30000);
-            InputStream in = url.openConnection().getInputStream();
-            return new JSONObject(Utils.readFile(in));
+            URL url = new URL("https://www.yzking.cn/plugins/nk/" + plugin.getName() + "/" + plugin.getName() +  ".json");
+            url.openConnection().setConnectTimeout(30000); // 30秒
+            url.openConnection().setReadTimeout(30000); // 30秒
+            InputStreamReader inr = new InputStreamReader(url.openConnection().getInputStream(), StandardCharsets.UTF_8);
+            JsonObject res = JsonParser.parseReader(inr).getAsJsonObject();
+            inr.close();
+            return res;
         } catch (IOException e) {
-            return null;
+            return new JsonObject();
         }
     }
 
     public static void checkPluginUpdate(Plugin plugin) {
-        if (getPluginJsonObject(plugin) != null) {
-            if (!plugin.getDescription().getVersion().equals(getPluginJsonObject(plugin).getString("version"))) {
-                ExtensionMain.getInstance().getLogger().info(TextFormat.YELLOW + plugin.getName() + "插件有更新!最新版本为" + TextFormat.BLUE + getPluginJsonObject(plugin).getString("version"));
-                ExtensionMain.getInstance().getLogger().info(TextFormat.YELLOW + plugin.getName() + "下载地址:" + getPluginJsonObject(plugin).getString("download"));
-            } else {
-                ExtensionMain.getInstance().getLogger().info(TextFormat.BLUE + plugin.getName() + "插件为最新版本!版本号" + plugin.getDescription().getVersion());
+        Thread thread = new Thread(() -> {
+            JsonObject jsonObject = getPluginJsonObject(plugin);
+            if (jsonObject.isJsonNull()) ExtensionMain.getInstance().getLogger().warning("[" + plugin.getName() + "]" + "插件更新检查失败！");
+            else {
+                String version = jsonObject.get("version").getAsString();
+                String link = jsonObject.get("link").getAsString();
+                String description = jsonObject.get("description").getAsString();
+
+                if (!plugin.getDescription().getVersion().equals(version)) {
+                    ExtensionMain.getInstance().getLogger().info("§e[" + plugin.getName() + "]插件最新版本: §b" + version + "\n§e下载地址：§a" + link + "\n更新内容：§6" + description);
+                } else {
+                    ExtensionMain.getInstance().getLogger().info("§a[" + plugin.getName() + "]插件已是最新版本！");
+                }
             }
-        } else {
-            ExtensionMain.getInstance().getLogger().warning("[" + plugin.getName() + "]" + "插件更新检查失败!");
-        }
+        });
+        thread.start();
     }
 }

@@ -1,8 +1,15 @@
 check_update: true
 
-storage_mode: default
+storage_mode: local
 host: #localhost
 port: #3306 or 1433
 database: #database
 username: #root
 password: #root
+
+
+params:
+#sqlserver:
+  #encrypt: #'false'
+  #trustServerCertificate: #'false'
+  #hostNameInCertificate: #'url'

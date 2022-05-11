@@ -1,4 +1,4 @@
-package cn.yzq25.extension;
+package cn.yzking.extension;
 
 import java.sql.Connection;
 
@@ -8,6 +8,7 @@ import java.sql.Connection;
 public interface Database {
     String getName();
     boolean connect();
+    Connection createConnection();
     boolean isConnect();
     boolean close();
     Connection getConnection();
