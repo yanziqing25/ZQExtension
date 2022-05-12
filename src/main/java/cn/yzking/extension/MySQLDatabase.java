@@ -2,6 +2,7 @@ package cn.yzking.extension;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,6 +12,11 @@ import java.util.Map;
 public class MySQLDatabase extends RelationalDatabase {
     public MySQLDatabase(String host, int port, String database, String username, String password, Map<String, String> params) {
         super(host, port, database, username, password, params);
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
     }
     public MySQLDatabase(String host, int port, String database, String username, String password) {
         this(host, port, database, username, password, new HashMap<>());
@@ -22,18 +28,18 @@ public class MySQLDatabase extends RelationalDatabase {
     }
 
     @Override
-    public boolean connect() {
+    public synchronized boolean connect() {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
             StringBuilder connectURLBuilder = new StringBuilder("jdbc:mysql://" + this.host + ":" + this.port + "/" + this.database);
             if (!this.params.isEmpty()) {
                 connectURLBuilder.append("?");
                 this.params.forEach((k,v) -> connectURLBuilder.append(k).append("=").append(v).append("&"));
                 connectURLBuilder.deleteCharAt(connectURLBuilder.length() - 1);
             }
+            this.connection = null;
             this.connection = DriverManager.getConnection(connectURLBuilder.toString(), this.username, this.password);
             return true;
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
@@ -42,7 +48,6 @@ public class MySQLDatabase extends RelationalDatabase {
     @Override
     public Connection createConnection() {
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
             StringBuilder connectURLBuilder = new StringBuilder("jdbc:mysql://" + this.host + ":" + this.port + "/" + this.database);
             if (!this.params.isEmpty()) {
                 connectURLBuilder.append("?");
@@ -50,7 +55,7 @@ public class MySQLDatabase extends RelationalDatabase {
                 connectURLBuilder.deleteCharAt(connectURLBuilder.length() - 1);
             }
             return DriverManager.getConnection(connectURLBuilder.toString(), this.username, this.password);
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
             return null;
         }
