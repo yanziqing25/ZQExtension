@@ -47,11 +47,7 @@ public class ExtensionMain extends PluginBase {
     }
     @Override
     public void onDisable() {
-        if (database != null && database.isConnect()) {
-            if (database.close()) {
-                getLogger().info(TextFormat.RED + database.getName() + "连接已关闭!");
-            }
-        }
+        if (database != null && database.isConnect() && database.close()) getLogger().info(TextFormat.RED + database.getName() + "连接已关闭!");
         getLogger().info(TextFormat.RED + "插件已关闭!");
     }
 
