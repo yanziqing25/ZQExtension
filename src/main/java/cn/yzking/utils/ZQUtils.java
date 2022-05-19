@@ -3,19 +3,12 @@ package cn.yzking.utils;
 import cn.nukkit.item.Item;
 import cn.nukkit.plugin.Plugin;
 import cn.yzking.extension.ExtensionMain;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import cn.yzking.extension.task.CheckPluginUpdateTask;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by Yanziqing25
@@ -946,36 +939,8 @@ public class ZQUtils {
         }
     }
 
-    private static JsonObject getPluginJsonObject(Plugin plugin) {
-        try {
-            URL url = new URL("https://www.yzking.cn/plugins/nk/" + plugin.getName() + "/" + plugin.getName() +  ".json");
-            url.openConnection().setConnectTimeout(30000); // 30秒
-            url.openConnection().setReadTimeout(30000); // 30秒
-            InputStreamReader inr = new InputStreamReader(url.openConnection().getInputStream(), StandardCharsets.UTF_8);
-            JsonObject res = JsonParser.parseReader(inr).getAsJsonObject();
-            inr.close();
-            return res;
-        } catch (IOException e) {
-            return new JsonObject();
-        }
-    }
-
     public static void checkPluginUpdate(Plugin plugin) {
-        Thread thread = new Thread(() -> {
-            JsonObject jsonObject = getPluginJsonObject(plugin);
-            if (jsonObject.isJsonNull()) ExtensionMain.getInstance().getLogger().warning("[" + plugin.getName() + "]" + "插件更新检查失败！");
-            else {
-                String version = jsonObject.get("version").getAsString();
-                String link = jsonObject.get("link").getAsString();
-                String description = jsonObject.get("description").getAsString();
-
-                if (!plugin.getDescription().getVersion().equals(version)) {
-                    ExtensionMain.getInstance().getLogger().info("§e[" + plugin.getName() + "]插件最新版本: §b" + version + "\n§e下载地址：§a" + link + "\n更新内容：§6" + description);
-                } else {
-                    ExtensionMain.getInstance().getLogger().info("§a[" + plugin.getName() + "]插件已是最新版本！");
-                }
-            }
-        });
-        thread.start();
+        ExtensionMain mainPlugin = ExtensionMain.getInstance();
+        mainPlugin.getServer().getScheduler().scheduleTask(mainPlugin, new CheckPluginUpdateTask(mainPlugin, plugin), true);
     }
 }
